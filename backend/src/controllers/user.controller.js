@@ -37,6 +37,59 @@ const registerUser = async (req, res) => {
     }
 };
 
+const loginUser = async (req, res) => {
+    try{
+
+        // checking if the user already exists
+        const { username, password } = req.body;
+
+        const user = await User.findOne({ username });
+
+        if(!user){
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Check if the password is correct
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+            return res.status(401).json({ message: "Invalid credentials" });
+        }
+
+        // Update the user's logged-in status
+        user.loggedIn = true;
+
+        res.status(200).json({
+            message: "User logged in successfully",
+            user: { id: user._id, email: user.email, username: user.username }
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Error logging in user", error: error.message });
+    }
+};
+
+const logoutUser = async (req, res) => {
+    try {
+        const { username } = req.body;
+
+        const user = await User.findOne({ username });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Update the user's logged-in status
+        user.loggedIn = false;
+
+        res.status(200).json({
+            message: "User logged out successfully",
+            user: { id: user._id, email: user.email, username: user.username }
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Error logging out user", error: error.message });
+    }
+};
+
 export{
-    registerUser
-}
+    registerUser,
+    loginUser,
+    logoutUser
+};
